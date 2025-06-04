@@ -8,3 +8,7 @@ cd
 cd ~/.config/fetch || exit 1
 sudo make install
 cd
+
+cd ~/.local/src/fast-files || exit 1
+sudo make install
+cd
