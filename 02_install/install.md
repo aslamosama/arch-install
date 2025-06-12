@@ -76,6 +76,12 @@ mkdir -p /mnt/boot
 mount /dev/sda5 /mnt/boot  # Replace with actual EFI partition
 ```
 
+Re-check the partition layout:
+
+```bash
+lsblk
+```
+
 ## 7. Run the Arch Install Script
 
 Launch the guided installer:
