@@ -14,4 +14,4 @@ sudo pacman -S --needed git base-devel && git clone https://aur.archlinux.org/ya
 cd
 
 info "Installing packages from AUR"
-yay -S --needed ani-cli ctpv-git dict-wn dragon-drop gopeed-bin gowall iwe-bin mangal-bin networkmanager-dmenu-git pandoc-bin pandoc-crossref-bin phinger-cursors qogir-gtk-theme task-spooler vscode-langservers-extracted
+yay -S --needed ani-cli ctpv-git dict-wn dragon-drop gopeed-bin gowall iwe-bin mangal-bin networkmanager-dmenu-git pandoc-bin pandoc-crossref-bin phinger-cursors picom-pijulius-next-git qogir-gtk-theme task-spooler vscode-langservers-extracted

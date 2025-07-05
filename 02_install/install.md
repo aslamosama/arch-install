@@ -13,6 +13,7 @@ setfont iso01-12x22
 ```bash
 iwctl
 station wlan0 connect <wifi_name>
+exit
 ping google.com
 ```
 
