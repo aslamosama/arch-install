@@ -2,7 +2,7 @@
 title: Arch Install Instructions
 ---
 
-## 1. Set a Bigger TTY Font
+## 1. Set a Bigger TTY Font (Optional)
 
 ```bash
 setfont iso01-12x22
@@ -35,12 +35,11 @@ Identify your target drive (usually `/dev/sda`), then create partitions using `c
 cfdisk /dev/sda
 ```
 
-* Locate the unallocated space.
-* Create a **separate EFI partition** for Linux.
-* The **Linux EFI** should come *before* the Windows EFI.
-* Allocate **\~500MB** for each EFI partition.
-* Do **not** create separate `/home` and `/root` partitions.
-* Create a single Linux partition of **at least 50GB**.
+- Locate the unallocated space.
+- Create a **separate EFI partition** for Linux.
+- Allocate **\~500MB** for each EFI partition.
+- May create separate `/home` and `/root` partitions.
+- May create a `swap`.
 
 Re-check the partition layout:
 
@@ -67,7 +66,13 @@ mkfs.ext4 /dev/sda6
 Mount the Linux root partition:
 
 ```bash
-mount /dev/sda6 /mnt
+mount /dev/sda6 /mnt  # Replace with actual root partition
+```
+
+Mount the Linux home partition if separately created:
+
+```bash
+mount /dev/sda7 /mnt  # Replace with actual home partition
 ```
 
 Create and mount the EFI directory:
@@ -91,8 +96,21 @@ Launch the guided installer:
 archinstall
 ```
 
-* When asked about the partition layout, choose **"premounted configuration"**.
-* Provide `/mnt` as the mount point.
-* After installation, say **"yes"** to `chroot` into the new system.
+- When asked about the partition layout, choose **"premounted configuration"**.
+- Provide `/mnt` as the mount point.
+- After installation, say **"yes"** to `chroot` into the new system.
+
+## 8. Exit Chroot and Reboot
+
+If everything seems alright exit chroot and reboot into Arch.
+Now get the postinstall scripts:
+
+```bash
+pacman -S git
+git clone https://github.com/aslamosama/arch-install.git
+cd arch-install
+./pre_gui.sh
+./post_gui.sh
+```
 
 ---

@@ -106,3 +106,15 @@ rm /var/lib/pacman/db.lck
 ## Manually reinstall pacman
 
 Install the statically compiled version `pacman-static` or, boot into the Arch ISO and reinstall.
+
+## Remove Orphaned packages
+
+```bash
+sudo pacman -Rns $(pacman -Qtdq)
+```
+
+# Slow boot time due to tpm service timeout
+
+```bash
+systemctl mask dev-tpmrm0.device
+```

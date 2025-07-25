@@ -81,7 +81,7 @@ cd "$HOME" || error "Could not return to home directory."
 # --------------------------------------------
 
 FONT_DIR="$HOME/.local/share/fonts"
-FONT_BACKUP="$HOME/backup/font_backup.zip"
+FONT_BACKUP="$HOME/backup"
 
 if [ ! -d "$FONT_DIR" ]; then
   warn "Fonts directory '$FONT_DIR' not found; skipping font backup."
@@ -89,6 +89,7 @@ else
   cd "$FONT_DIR" || error "Failed to cd into '$FONT_DIR'."
   find . -type f -o -type d | zip -@ "font_backup.zip" >/dev/null 2>&1
   if [ -f "font_backup.zip" ]; then
+    mkdir -p "$FONT_BACKUP"
     mv "font_backup.zip" "$FONT_BACKUP" || error "Failed to move font_backup.zip."
     success "Fonts backed up to '$FONT_BACKUP'."
   else
@@ -181,73 +182,72 @@ case "$choice" in
 *) sudo nvim /etc/fstab || warn "Exited editor; ensure /etc/fstab was edited." ;;
 esac
 
-
 # --------------------------------------------
-# 8. Share Backup (pcshare)
+# 8. Backup
 # --------------------------------------------
 
 if [ ! -d "$HOME/backup" ]; then
   error "Backup folder does not exist at $HOME/backup"
 fi
 
-USB_FOLDERS=()
-for dir in /mnt/usb*; do
-  if [ -d "$dir" ] && mount | grep -q "on $dir "; then
-    USB_FOLDERS+=("$dir")
-  fi
-done
-
-if [ ${#USB_FOLDERS[@]} -eq 0 ]; then
-  BACKUP_ZIP="$HOME/backup.zip"
-  zip -r "$BACKUP_ZIP" "$HOME/backup" >/dev/null 2>&1
-  if [ -f "$BACKUP_ZIP" ]; then
-    success "Backup directory zipped into '$BACKUP_ZIP'."
-  else
-    error "Failed to create '$BACKUP_ZIP'."
-  fi
-  if command -v pcshare >/dev/null 2>&1; then
-    info "Download file path should be Downloads/backup.zip"
-    pcshare "$BACKUP_ZIP"
-    if [ $? -eq 0 ]; then
-      success "pcshare exited. Ensure you downloaded 'backup.zip' on your mobile device."
-    else
-      warn "pcshare encountered an error or was closed unexpectedly."
-    fi
-  else
-    warn "'pcshare' command not found; cannot share backup automatically."
-    info "Manually copy '$BACKUP_ZIP' to your mobile device."
-  fi
-  success "Backup script completed."
-  exit 0
-fi
-
-if [ ${#USB_FOLDERS[@]} -eq 1 ]; then
-  chosen_folder="${USB_FOLDERS[0]}"
-else
-  info "Mounted USB folders found:"
-  for i in "${!USB_FOLDERS[@]}"; do
-    echo "$((i+1))) ${USB_FOLDERS[i]}"
-  done
-
-  while true; do
-    input "Enter the number of the folder to move the backup to: "
-    read choice
-    if [[ "$choice" =~ ^[0-9]+$ ]] && (( choice >= 1 && choice <= ${#USB_FOLDERS[@]} )); then
-      chosen_folder="${USB_FOLDERS[$((choice-1))]}"
-      break
-    else
-      echo "Invalid choice. Please try again."
+get_usb_folders() {
+  local folders=()
+  for dir in /mnt/usb*; do
+    if [ -d "$dir" ] && mountpoint -q "$dir"; then
+      folders+=("$dir")
     fi
   done
+  printf "%s\n" "${folders[@]}"
+}
+
+if [ -z "$(get_usb_folders)" ]; then
+  input "No USB device found. Do you want to mount one using the mounter script? [Y/n]: "
+  read -r choice
+  case "$choice" in
+  [nN]*)
+    info "Compressing the backup directory..."
+    info "Name the zip 'backup'"
+    compressor "$HOME/backup"
+    success "Backup directory compressed."
+    ;;
+  *)
+    mounter
+    ;;
+  esac
 fi
 
-if [ -n "$chosen_folder" ]; then
-  echo "Moving backup folder to $chosen_folder"
-  rsync -a --delete "$HOME/backup/" "$chosen_folder/backup/"
-else
-  echo "Invalid choice. Exiting."
-  exit 1
+USB_FOLDERS=($(get_usb_folders))
+
+if [ ${#USB_FOLDERS[@]} -gt 0 ]; then
+  if [ ${#USB_FOLDERS[@]} -eq 1 ]; then
+    chosen_folder="${USB_FOLDERS[0]}"
+  else
+    info "Mounted USB folders found:"
+    for i in "${!USB_FOLDERS[@]}"; do
+      printf "%s) %s\n" "$((i + 1))" "${USB_FOLDERS[i]}"
+    done
+
+    while true; do
+      input "Enter the number of the folder to move the backup to: "
+      read -r choice
+      if [ "$choice" -ge 1 ] && [ "$choice" -le ${#USB_FOLDERS[@]} ]; then
+        chosen_folder="${USB_FOLDERS[$((choice - 1))]}"
+        break
+      else
+        warn "Invalid choice. Please try again."
+      fi
+    done
+  fi
+
+  if [ -n "$chosen_folder" ]; then
+    info "Moving backup folder to $chosen_folder"
+    rsync -a --delete "$HOME/backup/" "$chosen_folder/backup/"
+    success "Backup completed successfully."
+  else
+    error "Invalid choice. Exiting."
+  fi
 fi
+
 
 # --------------------------------------------
 # Done
