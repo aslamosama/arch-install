@@ -124,7 +124,7 @@ if confirm_step "Install Pacman Packages"; then
     nsxiv ntfs-3g openssh os-prober pass perl-file-homedir perl-file-mimeinfo \
     perl-image-exiftool perl-yaml-tiny presenterm prettier pulsemixer pyright \
     python-matplotlib python-pandas python-pip python-pipx python-weasyprint \
-    qalculate-gtk qrencode reflector ripgrep rsync ruff shfmt speedtest-cli \
+    qalculate-gtk qrencode reflector ripgrep rsync ruff shfmt speedtest-cli stack \
     stow tealdeer tesseract tesseract-data-eng texlive-basic texlive-bibtexextra \
     texlive-binextra texlive-context texlive-fontsextra texlive-fontsrecommended \
     texlive-fontutils texlive-formatsextra texlive-games texlive-humanities \

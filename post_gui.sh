@@ -76,8 +76,8 @@ if confirm_step "Install AUR Helper (yay) and Packages"; then
   yay -S --needed --noconfirm \
     ani-cli ariang-allinone-bin ctpv-git dict-wn dragon-drop iwe-bin \
     mangal-bin networkmanager-dmenu-git pandoc-bin pandoc-crossref-bin \
-    phinger-cursors picom-pijulius-next-git qogir-gtk-theme simple-mtpfs \
-    task-spooler vscode-langservers-extracted || error "Failed to install AUR packages."
+    phinger-cursors picom-pijulius-next-git python-pandoc-include qogir-gtk-theme \
+    simple-mtpfs task-spooler vscode-langservers-extracted || error "Failed to install AUR packages."
   success "AUR packages installed."
 else
   warn "Skipping AUR helper and package installation."
@@ -94,7 +94,10 @@ if confirm_step "Compile Tools from Source"; then
     local dir=$1
     info "Processing $dir..."
     if [ -d "$dir" ]; then
-      cd "$dir" || { warn "Could not cd into $dir"; return; }
+      cd "$dir" || {
+        warn "Could not cd into $dir"
+        return
+      }
       bear -- make
       sudo make install
       cd "$HOME"
@@ -113,6 +116,34 @@ if confirm_step "Compile Tools from Source"; then
     cd "$HOME"
   else
     warn "Directory not found: $HOME/.local/src/fast-files"
+  fi
+
+  info "Processing pandoc-sidenote..."
+  if [ -d "$HOME/.local/src/pandoc-sidenote" ]; then
+    warn "Directory already exists: $HOME/.local/src/pandoc-sidenote"
+  else
+    git clone https://github.com/jez/pandoc-sidenote "$HOME/.local/src/pandoc-sidenote" || {
+      warn "Failed to clone pandoc-sidenote"
+      return
+    }
+  fi
+
+  if [ -d "$HOME/.local/src/pandoc-sidenote" ]; then
+    cd "$HOME/.local/src/pandoc-sidenote" || {
+      warn "Could not cd into pandoc-sidenote"
+      return
+    }
+    stack build || {
+      warn "Failed to build pandoc-sidenote"
+      return
+    }
+    stack install || {
+      warn "Failed to install pandoc-sidenote"
+      return
+    }
+    cd "$HOME"
+  else
+    warn "Directory not found: $HOME/.local/src/pandoc-sidenote"
   fi
 
   success "Finished compiling tools from source."
@@ -316,7 +347,7 @@ configure_grub() {
   local GRUB_CFG="/etc/default/grub"
 
   if [ ! -f "$TTF_PATH" ]; then
-      error "Dejavu font not found at $TTF_PATH"
+    error "Dejavu font not found at $TTF_PATH"
   fi
 
   info "Generating GRUB font..."
@@ -345,18 +376,17 @@ else
   warn "Skipping GRUB configuration."
 fi
 
-
 # ==============================================================================
 # SECTION 22: CHANGE GETTY ISSUE
 # ==============================================================================
 
 update_getty_issue() {
-    info "Updating /etc/issue..."
-    if [[ $EUID -ne 0 ]]; then
-        error "This step must be run as root."
-    fi
+  info "Updating /etc/issue..."
+  if [[ $EUID -ne 0 ]]; then
+    error "This step must be run as root."
+  fi
 
-    cat <<'EOF' >/etc/issue
+  cat <<'EOF' >/etc/issue
  [H [2J
             [0;36m.                                                      [0;36m| \s \r
            [0;36m/ \                                                     [0;36m|  [0;37m\m
@@ -368,13 +398,13 @@ update_getty_issue() {
      [1;36m/.^         ^.\  [0;37mTM                                            [0;36m| \l  [0;37mon \n
  [0m
 EOF
-    success "/etc/issue has been updated."
+  success "/etc/issue has been updated."
 }
 
 if confirm_step "Update /etc/issue"; then
-    sudo bash -c "$(declare -f update_getty_issue); update_getty_issue"
+  sudo bash -c "$(declare -f update_getty_issue); update_getty_issue"
 else
-    warn "Skipping /etc/issue update."
+  warn "Skipping /etc/issue update."
 fi
 
 # ==============================================================================
@@ -382,37 +412,37 @@ fi
 # ==============================================================================
 
 setup_auto_login() {
-    info "Setting up auto-login..."
-    if [[ $EUID -ne 0 ]]; then
-        error "This step must be run as root."
-    fi
+  info "Setting up auto-login..."
+  if [[ $EUID -ne 0 ]]; then
+    error "This step must be run as root."
+  fi
 
-    if ! command -v fzf >/dev/null 2>&1; then
-      error "fzf is not installed. Please install it first."
-    fi
+  if ! command -v fzf >/dev/null 2>&1; then
+    error "fzf is not installed. Please install it first."
+  fi
 
-    local USERNAME
-    USERNAME=$(awk -F: '$3 >= 1000 && $1 != "nobody" {print $1}' /etc/passwd | fzf --prompt="Select user for auto-login: ")
+  local USERNAME
+  USERNAME=$(awk -F: '$3 >= 1000 && $1 != "nobody" {print $1}' /etc/passwd | fzf --prompt="Select user for auto-login: ")
 
-    if [ -z "$USERNAME" ]; then
-      warn "No user selected. Skipping auto-login setup."
-      return
-    fi
+  if [ -z "$USERNAME" ]; then
+    warn "No user selected. Skipping auto-login setup."
+    return
+  fi
 
-    mkdir -p /etc/systemd/system/getty@tty1.service.d/
-    cat <<EOF >/etc/systemd/system/getty@tty1.service.d/skip-username.conf
+  mkdir -p /etc/systemd/system/getty@tty1.service.d/
+  cat <<EOF >/etc/systemd/system/getty@tty1.service.d/skip-username.conf
 [Service]
 ExecStart=
 ExecStart=-/sbin/agetty -o '-p -- $USERNAME' --noclear --skip-login - \$TERM
 EOF
 
-    success "Auto-login configured for user: $USERNAME"
+  success "Auto-login configured for user: $USERNAME"
 }
 
 if confirm_step "Setup auto-login (skip username prompt)"; then
-    sudo bash -c "$(declare -f setup_auto_login); setup_auto_login"
+  sudo bash -c "$(declare -f setup_auto_login); setup_auto_login"
 else
-    warn "Skipping auto-login setup."
+  warn "Skipping auto-login setup."
 fi
 
 # ==============================================================================
@@ -420,70 +450,70 @@ fi
 # ==============================================================================
 
 setup_firefox() {
-    info "Setting up Firefox..."
-    local PROFILE_DIR="$HOME/.mozilla/firefox"
-    local BACKUP_DIR="$HOME/backup/firefox_places"
-    local USER_JS_URL="https://raw.githubusercontent.com/yokoffing/Betterfox/main/user.js"
+  info "Setting up Firefox..."
+  local PROFILE_DIR="$HOME/.mozilla/firefox"
+  local BACKUP_DIR="$HOME/backup/firefox_places"
+  local USER_JS_URL="https://raw.githubusercontent.com/yokoffing/Betterfox/main/user.js"
 
-    pkill firefox
-    sleep 2
+  pkill firefox
+  sleep 2
 
-    restore_profile() {
-        local PROFILE_NAME="$1"
-        local BACKUP_FILE="$BACKUP_DIR/places_${PROFILE_NAME}.sqlite"
-        local PROFILE_PATH
-        PROFILE_PATH=$(find "$PROFILE_DIR" -maxdepth 1 -type d -name "*$PROFILE_NAME*" | head -n 1)
-        if [ -d "$PROFILE_PATH" ]; then
-            cp -iv "$BACKUP_FILE" "$PROFILE_PATH/places.sqlite"
-            chmod 600 "$PROFILE_PATH/places.sqlite"
-            chown "$USER:$USER" "$PROFILE_PATH/places.sqlite"
-            curl -sSL "$USER_JS_URL" -o "$PROFILE_PATH/user.js"
-            chmod 644 "$PROFILE_PATH/user.js"
-        else
-            warn "Firefox profile '$PROFILE_NAME' not found."
-        fi
-    }
+  restore_profile() {
+    local PROFILE_NAME="$1"
+    local BACKUP_FILE="$BACKUP_DIR/places_${PROFILE_NAME}.sqlite"
+    local PROFILE_PATH
+    PROFILE_PATH=$(find "$PROFILE_DIR" -maxdepth 1 -type d -name "*$PROFILE_NAME*" | head -n 1)
+    if [ -d "$PROFILE_PATH" ]; then
+      cp -iv "$BACKUP_FILE" "$PROFILE_PATH/places.sqlite"
+      chmod 600 "$PROFILE_PATH/places.sqlite"
+      chown "$USER:$USER" "$PROFILE_PATH/places.sqlite"
+      curl -sSL "$USER_JS_URL" -o "$PROFILE_PATH/user.js"
+      chmod 644 "$PROFILE_PATH/user.js"
+    else
+      warn "Firefox profile '$PROFILE_NAME' not found."
+    fi
+  }
 
-    firefox --CreateProfile "olddefault" >/dev/null
-    restore_profile "default-release"
-    restore_profile "olddefault"
+  firefox --CreateProfile "olddefault" >/dev/null
+  restore_profile "default-release"
+  restore_profile "olddefault"
 
-    input "Set engine to duckduckgo for both profiles, then press Enter to continue..."
-    read -r
-    input "Set compact mode for both profiles, then press Enter to continue..."
-    read -r
-    input "Set about:config browser.tabs.closeWindowWithLastTab to false for both profiles, then press Enter to continue..."
-    read -r
-    input "Set appropriate layout.css.devPixelsPerPx for both profiles in about:config, then press Enter to continue..."
-    read -r
-    info "Install Extensions for 'default-release': bitwarden, sponsorblock, ublock origin, scihub, turbo download manager, violentmonkey"
-    input "Press Enter once done..."
-    read -r
-    info "Install Extensions for 'olddefault': bitwarden, turbo download manager, ublock origin, windscribe"
-    input "Press Enter once done..."
-    read -r
-    info "Review filter lists from https://github.com/yokoffing/filterlists#guidelines for both profiles"
-    input "Press Enter once done..."
-    read -r
-    info "Disable PiP popup for both profiles"
-    input "Press Enter once done..."
-    read -r
-    info "Set Ctrl+H to sort by last visited for both profiles"
-    input "Press Enter once done..."
-    read -r
-    info "Set default homepage and newtab page to blank for both profiles"
-    input "Press Enter once done..."
-    read -r
-    info "Configure 'play with mpv' userjs and mpv-handler for the main profile"
-    input "Press Enter once done..."
-    read -r
-    success "Firefox setup complete."
+  input "Set engine to duckduckgo for both profiles, then press Enter to continue..."
+  read -r
+  input "Set compact mode for both profiles, then press Enter to continue..."
+  read -r
+  input "Set about:config browser.tabs.closeWindowWithLastTab to false for both profiles, then press Enter to continue..."
+  read -r
+  input "Set appropriate layout.css.devPixelsPerPx for both profiles in about:config, then press Enter to continue..."
+  read -r
+  info "Install Extensions for 'default-release': bitwarden, sponsorblock, ublock origin, scihub, turbo download manager, violentmonkey"
+  input "Press Enter once done..."
+  read -r
+  info "Install Extensions for 'olddefault': bitwarden, turbo download manager, ublock origin, windscribe"
+  input "Press Enter once done..."
+  read -r
+  info "Review filter lists from https://github.com/yokoffing/filterlists#guidelines for both profiles"
+  input "Press Enter once done..."
+  read -r
+  info "Disable PiP popup for both profiles"
+  input "Press Enter once done..."
+  read -r
+  info "Set Ctrl+H to sort by last visited for both profiles"
+  input "Press Enter once done..."
+  read -r
+  info "Set default homepage and newtab page to blank for both profiles"
+  input "Press Enter once done..."
+  read -r
+  info "Configure 'play with mpv' userjs and mpv-handler for the main profile"
+  input "Press Enter once done..."
+  read -r
+  success "Firefox setup complete."
 }
 
 if confirm_step "Setup Firefox"; then
-    setup_firefox
+  setup_firefox
 else
-    warn "Skipping Firefox setup."
+  warn "Skipping Firefox setup."
 fi
 
 # ==============================================================================
@@ -491,35 +521,35 @@ fi
 # ==============================================================================
 
 setup_fstab() {
-    info "Setting up /etc/fstab..."
-    info "Mount C, D, and E drives using the dmenu mounter script."
-    sleep 2
-    mounter || warn "mounter command failed for C drive."
-    sleep 2
-    mounter || warn "mounter command failed for D drive."
-    sleep 2
-    mounter || warn "mounter command failed for E drive."
+  info "Setting up /etc/fstab..."
+  info "Mount C, D, and E drives using the dmenu mounter script."
+  sleep 2
+  mounter || warn "mounter command failed for C drive."
+  sleep 2
+  mounter || warn "mounter command failed for D drive."
+  sleep 2
+  mounter || warn "mounter command failed for E drive."
 
-    sudo genfstab / >~/fstab
-    if command -v xclip >/dev/null 2>&1; then
-        xclip -selection clipboard < ~/fstab
-        info "Generated fstab entries copied to clipboard."
-    else
-        warn "xclip not found. Please copy the contents of ~/fstab manually."
-        cat ~/fstab
-    fi
+  sudo genfstab / >~/fstab
+  if command -v xclip >/dev/null 2>&1; then
+    xclip -selection clipboard <~/fstab
+    info "Generated fstab entries copied to clipboard."
+  else
+    warn "xclip not found. Please copy the contents of ~/fstab manually."
+    cat ~/fstab
+  fi
 
-    input "Paste the copied entries into /etc/fstab now. Opening nvim... Press Enter to continue."
-    read -r
-    sudoedit /etc/fstab
-    info "Now check if mounted partitions work as expected."
-    success "fstab setup complete."
+  input "Paste the copied entries into /etc/fstab now. Opening nvim... Press Enter to continue."
+  read -r
+  sudoedit /etc/fstab
+  info "Now check if mounted partitions work as expected."
+  success "fstab setup complete."
 }
 
 if confirm_step "Setup /etc/fstab"; then
-    setup_fstab
+  setup_fstab
 else
-    warn "Skipping fstab setup."
+  warn "Skipping fstab setup."
 fi
 
 # ==============================================================================
@@ -527,41 +557,41 @@ fi
 # ==============================================================================
 
 setup_misc() {
-    info "Performing miscellaneous setup tasks..."
+  info "Performing miscellaneous setup tasks..."
 
-    info "Cloning voidrice repository..."
-    if [ ! -d "$HOME/.local/src/voidrice" ]; then
-        git clone https://github.com/lukesmithxyz/voidrice.git ~/.local/src/voidrice
-    else
-        info "voidrice repository already exists."
-    fi
+  info "Cloning voidrice repository..."
+  if [ ! -d "$HOME/.local/src/voidrice" ]; then
+    git clone https://github.com/lukesmithxyz/voidrice.git ~/.local/src/voidrice
+  else
+    info "voidrice repository already exists."
+  fi
 
-    info "Cloning/pulling bookmarks repository..."
-    if [ -d "$HOME/.local/src/bookmarks/.git" ]; then
-        git -C "$HOME/.local/src/bookmarks" pull --rebase
-    else
-        git clone https://github.com/fmhy/bookmarks.git "$HOME/.local/src/bookmarks"
-    fi
+  info "Cloning/pulling bookmarks repository..."
+  if [ -d "$HOME/.local/src/bookmarks/.git" ]; then
+    git -C "$HOME/.local/src/bookmarks" pull --rebase
+  else
+    git clone https://github.com/fmhy/bookmarks.git "$HOME/.local/src/bookmarks"
+  fi
 
-    info "Creating symbolic links for media folders..."
-    ln -sfn /mnt/d/Music ~/Music
-    ln -sfn /mnt/e/me ~/Me
+  info "Creating symbolic links for media folders..."
+  ln -sfn /mnt/d/Music ~/Music
+  ln -sfn /mnt/e/me ~/Me
 
-    info "Setting up cmus..."
-    input "Add music folder to cmus and set theme to night, then press Enter to continue..."
-    cmus
-    read -r
+  info "Setting up cmus..."
+  input "Add music folder to cmus and set theme to night, then press Enter to continue..."
+  cmus
+  read -r
 
-    info "Creating download directories..."
-    mkdir -p ~/Downloads/Images/Screenshots
-    mkdir -p ~/Downloads/Videos/Recordings
+  info "Creating download directories..."
+  mkdir -p ~/Downloads/Images/Screenshots
+  mkdir -p ~/Downloads/Videos/Recordings
 
-    info "Creating lf marks..."
-    local USERNAME
-    USERNAME=$(whoami)
-    local MARKS_FILE="$HOME/.local/share/lf/marks"
-    mkdir -p "$(dirname "$MARKS_FILE")"
-    cat <<EOF >"$MARKS_FILE"
+  info "Creating lf marks..."
+  local USERNAME
+  USERNAME=$(whoami)
+  local MARKS_FILE="$HOME/.local/share/lf/marks"
+  mkdir -p "$(dirname "$MARKS_FILE")"
+  cat <<EOF >"$MARKS_FILE"
 c:/mnt/c
 d:/mnt/d
 e:/mnt/e
@@ -570,25 +600,24 @@ s:/home/$USERNAME/Downloads/Images/Screenshots
 w:/home/$USERNAME/.config/x11/themeconf
 EOF
 
-    info "Updating tldr database..."
-    tldr --update
+  info "Updating tldr database..."
+  tldr --update
 
-    info "Configuring qalc..."
-    if command -v qalc >/dev/null 2>&1; then
-        qalc
-        echo 'calculate_as_you_type=1' >>~/.config/qalculate/qalc.cfg
-    else
-        warn "qalc command not found."
-    fi
-    success "Miscellaneous setup complete."
+  info "Configuring qalc..."
+  if command -v qalc >/dev/null 2>&1; then
+    qalc
+    echo 'calculate_as_you_type=1' >>~/.config/qalculate/qalc.cfg
+  else
+    warn "qalc command not found."
+  fi
+  success "Miscellaneous setup complete."
 }
 
 if confirm_step "Perform miscellaneous setup"; then
-    setup_misc
+  setup_misc
 else
-    warn "Skipping miscellaneous setup."
+  warn "Skipping miscellaneous setup."
 fi
-
 
 # ==============================================================================
 # FINAL REBOOT
@@ -602,7 +631,6 @@ if confirm_step "Reboot now to apply all changes"; then
 else
   info "Please reboot manually to apply all changes."
 fi
-
 
 info "Script finished!"
 success "All tasks completed."
