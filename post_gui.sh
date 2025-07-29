@@ -486,7 +486,7 @@ setup_firefox() {
   read -r
   input "Set appropriate layout.css.devPixelsPerPx for both profiles in about:config, then press Enter to continue..."
   read -r
-  info "Install Extensions for 'default-release': bitwarden, sponsorblock, ublock origin, scihub, turbo download manager, violentmonkey"
+  info "Install Extensions for 'default-release': bitwarden, sponsorblock, ublock origin, scihub, turbo download manager"
   input "Press Enter once done..."
   read -r
   info "Install Extensions for 'olddefault': bitwarden, turbo download manager, ublock origin, windscribe"
@@ -502,9 +502,6 @@ setup_firefox() {
   input "Press Enter once done..."
   read -r
   info "Set default homepage and newtab page to blank for both profiles"
-  input "Press Enter once done..."
-  read -r
-  info "Configure 'play with mpv' userjs and mpv-handler for the main profile"
   input "Press Enter once done..."
   read -r
   success "Firefox setup complete."
