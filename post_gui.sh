@@ -72,13 +72,13 @@ if confirm_step "Install AUR Helper (yay) and Packages"; then
     info "yay is already installed."
   fi
 
-  info "Installing packages from AUR using yay..."
-  yay -S --needed --noconfirm \
-    ani-cli ariang-allinone-bin ctpv-git dict-wn dragon-drop iwe-bin \
-    mangal-bin networkmanager-dmenu-git pandoc-bin pandoc-crossref-bin \
-    phinger-cursors picom-pijulius-next-git python-pandoc-include qogir-gtk-theme \
-    simple-mtpfs task-spooler vscode-langservers-extracted || error "Failed to install AUR packages."
-  success "AUR packages installed."
+  info "Installing packages from AUR using yay from aur.txt..."
+  if [ -f "aur.txt" ]; then
+    yay -S --needed --noconfirm - < aur.txt || error "Failed to install AUR packages."
+    success "AUR packages installed."
+  else
+    error "aur.txt not found."
+  fi
 else
   warn "Skipping AUR helper and package installation."
 fi
@@ -156,14 +156,23 @@ fi
 # ==============================================================================
 
 if confirm_step "Install npm and pipx Packages"; then
-  info "Installing global npm packages..."
-  npm install -g live-server || error "npm install failed."
+  info "Installing global npm packages from npm.txt..."
+  if [ -f "npm.txt" ]; then
+    xargs -a npm.txt npm install -g || error "npm install failed."
+    success "npm packages installed."
+  else
+    error "npm.txt not found."
+  fi
 
-  info "Installing pipx packages..."
-  pipx install git+https://github.com/veneres/py-pandoc-include-code.git || error "pipx install failed for pandoc-include-code."
-  pipx install aria2p[tui] || error "pipx install failed for aria2p."
-
-  success "npm and pipx packages installed."
+  info "Installing pipx packages from pipx.txt..."
+  if [ -f "pipx.txt" ]; then
+    while IFS= read -r package; do
+      pipx install "$package" || error "pipx install failed for $package."
+    done < pipx.txt
+    success "pipx packages installed."
+  else
+    error "pipx.txt not found."
+  fi
 else
   warn "Skipping npm and pipx package installation."
 fi

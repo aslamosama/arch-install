@@ -111,30 +111,13 @@ fi
 # ==============================================================================
 
 if confirm_step "Install Pacman Packages"; then
-  info "Installing all essential pacman packages..."
-  sudo pacman -S --needed --noconfirm \
-    7zip alsa-utils android-tools arch-install-scripts aria2 asciidoctor atool \
-    bandwhich bash-language-server bat bc bear biber blender brightnessctl \
-    chafa clang clipmenu cmake cmus curl dictd dosfstools dunst dust dysk \
-    efibootmgr eza fd ffmpeg ffmpegthumbnailer firefox fzf gimp git git-delta \
-    gnu-free-fonts gpick gping htop hyperfine imagemagick imlib2 inkscape \
-    inotify-tools inxi jq kitty lazygit lf libconfig libev libheif libnotify \
-    libreoffice-fresh libxft libxinerama love lsd lua-language-server maim \
-    man-db mdcat meld meson moreutils mpc mpv mtools nano neovim newsboat npm \
-    nsxiv ntfs-3g openssh os-prober pass perl-file-homedir perl-file-mimeinfo \
-    perl-image-exiftool perl-yaml-tiny presenterm prettier pulsemixer pyright \
-    python-matplotlib python-pandas python-pip python-pipx python-weasyprint \
-    qalculate-gtk qrencode reflector ripgrep rsync ruff shfmt speedtest-cli stack \
-    stow tealdeer tesseract tesseract-data-eng texlive-basic texlive-bibtexextra \
-    texlive-binextra texlive-context texlive-fontsextra texlive-fontsrecommended \
-    texlive-fontutils texlive-formatsextra texlive-games texlive-humanities \
-    texlive-latex texlive-latexextra texlive-latexrecommended texlive-luatex \
-    texlive-mathscience texlive-metapost texlive-music texlive-pictures \
-    texlive-plaingeneric texlive-pstricks texlive-publishers texlive-xetex \
-    tmux trash-cli ttf-nerd-fonts-symbols typst ueberzugpp unclutter unrar \
-    unzip uthash xcb-util xclip xdotool xorg-xrandr xorg-xsetroot xwallpaper \
-    yt-dlp zathura zathura-djvu zathura-pdf-poppler zip zsh || error "Pacman package installation failed."
-  success "All pacman packages installed."
+  info "Installing all essential pacman packages from pacman.txt..."
+  if [ -f "pacman.txt" ]; then
+    sudo pacman -S --needed --noconfirm - <pacman.txt || error "Pacman package installation failed."
+    success "All pacman packages installed."
+  else
+    error "pacman.txt not found."
+  fi
 else
   warn "Skipping Pacman Package Installation."
 fi

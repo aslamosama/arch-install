@@ -109,8 +109,18 @@ Now get the postinstall scripts:
 pacman -S git
 git clone https://github.com/aslamosama/arch-install.git
 cd arch-install
+```
+
+First run `pre-gui` script and reboot:
+
+```bash
 ./pre_gui.sh
-./post_gui.sh
+```
+
+Then run `post-gui` script.
+
+```bash
+./pre_gui.sh
 ```
 
 ---
