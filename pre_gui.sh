@@ -3,7 +3,7 @@
 set -euo pipefail
 
 # ==============================================================================
-# SECTION 0: HELPER FUNCTIONS AND SETUP
+# HELPER FUNCTIONS AND SETUP
 # ==============================================================================
 
 # Define color codes
@@ -37,7 +37,7 @@ confirm_step() {
 }
 
 # ==============================================================================
-# SECTION 1: PACMAN CONFIGURATION
+# PACMAN CONFIGURATION
 # ==============================================================================
 
 if confirm_step "Pacman Configuration"; then
@@ -78,7 +78,7 @@ else
 fi
 
 # ==============================================================================
-# SECTION 2: UPDATE MIRRORS
+# UPDATE MIRRORS
 # ==============================================================================
 
 if confirm_step "Update Mirrors"; then
@@ -107,7 +107,7 @@ else
 fi
 
 # ==============================================================================
-# SECTION 3: INSTALL PACMAN PACKAGES
+# INSTALL PACMAN PACKAGES
 # ==============================================================================
 
 if confirm_step "Install Pacman Packages"; then
@@ -123,7 +123,7 @@ else
 fi
 
 # ==============================================================================
-# SECTION 4: UNZIP BACKUP
+# UNZIP BACKUP
 # ==============================================================================
 
 if confirm_step "Restore Backup"; then
@@ -176,7 +176,7 @@ else
 fi
 
 # ==============================================================================
-# SECTION 5: GIT CONFIGURATION
+# GIT CONFIGURATION
 # ==============================================================================
 
 if confirm_step "Git Configuration"; then
@@ -193,7 +193,7 @@ else
 fi
 
 # ==============================================================================
-# SECTION 6: RESTORE SSH KEYS
+# RESTORE SSH KEYS
 # ==============================================================================
 
 if confirm_step "Restore SSH Keys"; then
@@ -226,7 +226,7 @@ else
 fi
 
 # ==============================================================================
-# SECTION 7: CLONE AND STOW DOTFILES
+# CLONE AND STOW DOTFILES
 # ==============================================================================
 
 if confirm_step "Clone and Stow Dotfiles"; then
@@ -251,7 +251,7 @@ else
 fi
 
 # ==============================================================================
-# SECTION 8: ZSH CONFIGURATION
+# ZSH CONFIGURATION
 # ==============================================================================
 
 if confirm_step "Zsh Configuration"; then
@@ -286,7 +286,7 @@ else
 fi
 
 # ==============================================================================
-# SECTION 9: COMPILE SUCKLESS UTILS
+# COMPILE SUCKLESS UTILS
 # ==============================================================================
 
 if confirm_step "Compile Suckless Utilities"; then
@@ -317,7 +317,46 @@ else
 fi
 
 # ==============================================================================
-# SECTION 10: CONFIGURE TOUCHPAD
+# FONTS
+# ==============================================================================
+
+setup_fonts() {
+  info "Setting up fonts..."
+  mkdir -p "$HOME/.local/share/fonts"
+  if [ -f ~/backup/font_backup.zip ]; then
+    unzip -o ~/backup/font_backup.zip -d ~/.local/share/fonts || warn "Failed to restore personal font backup."
+  else
+    warn "Personal font backup not found at ~/backup/font_backup.zip"
+  fi
+
+  local texlive_fonts=(cantarell plex fontawesome garamond-libre garamond-math gfsbodoni gfsdidot
+    inconsolata inter kpfonts-otf libertine libertinus-fonts montserrat newcomputermodern
+    stix2-otf tex-gyre tex-gyre-math opensans librebaskerville dejavu lato
+  )
+
+  info "Linking fonts from Texlive..."
+  for font in "${texlive_fonts[@]}"; do
+    font_path=$(find /usr/share/texmf-dist/fonts/opentype /usr/share/texmf-dist/fonts/truetype -type d -name "$font" -print -quit)
+    if [[ -n "$font_path" ]]; then
+      ln -sfn "$font_path" ~/.local/share/fonts/"$font"
+    else
+      warn "Font not found: $font"
+    fi
+  done
+
+  info "Updating font cache..."
+  fc-cache -v
+  success "Fonts setup complete."
+}
+
+if confirm_step "Setup fonts"; then
+  setup_fonts
+else
+  warn "Skipping font setup."
+fi
+
+# ==============================================================================
+# CONFIGURE TOUCHPAD
 # ==============================================================================
 
 if confirm_step "Configure Touchpad"; then
@@ -357,7 +396,7 @@ else
 fi
 
 # ==============================================================================
-# SECTION 11: REBOOT
+# REBOOT
 # ==============================================================================
 
 if confirm_step "Reboot System"; then

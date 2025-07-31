@@ -3,7 +3,7 @@
 set -euo pipefail
 
 # ==============================================================================
-# SECTION 0: HELPER FUNCTIONS AND SETUP
+# HELPER FUNCTIONS AND SETUP
 # ==============================================================================
 
 # Define color codes
@@ -37,7 +37,7 @@ confirm_step() {
 }
 
 # ==============================================================================
-# SECTION 12: THEMEFLIP
+# THEMEFLIP
 # ==============================================================================
 
 if confirm_step "Apply Theme"; then
@@ -53,7 +53,7 @@ else
 fi
 
 # ==============================================================================
-# SECTION 13: YAY AND AUR PACKAGES
+# YAY AND AUR PACKAGES
 # ==============================================================================
 
 if confirm_step "Install AUR Helper (yay) and Packages"; then
@@ -84,7 +84,7 @@ else
 fi
 
 # ==============================================================================
-# SECTION 14: COMPILE FROM SOURCE
+# COMPILE FROM SOURCE
 # ==============================================================================
 
 if confirm_step "Compile Tools from Source"; then
@@ -152,7 +152,7 @@ else
 fi
 
 # ==============================================================================
-# SECTION 15: OTHER PACKAGE MANAGERS
+# OTHER PACKAGE MANAGERS
 # ==============================================================================
 
 if confirm_step "Install npm and pipx Packages"; then
@@ -178,7 +178,7 @@ else
 fi
 
 # ==============================================================================
-# SECTION 16: NEOVIM SETUP
+# NEOVIM SETUP
 # ==============================================================================
 
 if confirm_step "Setup Neovim (Lazy Sync)"; then
@@ -190,7 +190,7 @@ else
 fi
 
 # ==============================================================================
-# SECTION 17: MPV SCRIPTS
+# MPV SCRIPTS
 # ==============================================================================
 
 install_mpv_scripts() {
@@ -225,57 +225,7 @@ else
 fi
 
 # ==============================================================================
-# SECTION 18: FONTS
-# ==============================================================================
-
-setup_fonts() {
-  info "Setting up fonts..."
-  mkdir -p ~/.local/share/fonts
-  if [ -f ~/backup/font_backup.zip ]; then
-    unzip -o ~/backup/font_backup.zip -d ~/.local/share/fonts || warn "Failed to restore personal font backup."
-  else
-    warn "Personal font backup not found at ~/backup/font_backup.zip"
-  fi
-
-  info "Linking fonts from Texlive..."
-  ln -sfn /usr/share/texmf-dist/fonts/opentype/gnome/cantarell ~/.local/share/fonts/cantarell
-  ln -sfn /usr/share/texmf-dist/fonts/truetype/public/dejavu ~/.local/share/fonts/dejavu
-  ln -sfn /usr/share/texmf-dist/fonts/opentype/public/fontawesome ~/.local/share/fonts/fontawesome
-  ln -sfn /usr/share/texmf-dist/fonts/opentype/public/garamond-libre ~/.local/share/fonts/garamond-libre
-  ln -sfn /usr/share/texmf-dist/fonts/opentype/public/garamond-math ~/.local/share/fonts/garamond-math
-  ln -sfn /usr/share/texmf-dist/fonts/opentype/public/gfsbodoni ~/.local/share/fonts/gfsbodoni
-  ln -sfn /usr/share/texmf-dist/fonts/opentype/public/gfsdidot ~/.local/share/fonts/gfsdidot
-  ln -sfn /usr/share/texmf-dist/fonts/opentype/public/inconsolata ~/.local/share/fonts/inconsolata
-  ln -sfn /usr/share/texmf-dist/fonts/opentype/public/inter ~/.local/share/fonts/inter
-  ln -sfn /usr/share/texmf-dist/fonts/opentype/public/kpfonts-otf ~/.local/share/fonts/kpfonts
-  ln -sfn /usr/share/texmf-dist/fonts/truetype/typoland/lato ~/.local/share/fonts/lato
-  ln -sfn /usr/share/texmf-dist/fonts/opentype/public/libertine ~/.local/share/fonts/libertine
-  ln -sfn /usr/share/texmf-dist/fonts/opentype/public/libertinus-fonts ~/.local/share/fonts/libertinus
-  ln -sfn /usr/share/texmf-dist/fonts/truetype/impallari/librebaskerville ~/.local/share/fonts/librebaskerville
-  ln -sfn /usr/share/texmf-dist/fonts/opentype/public/montserrat ~/.local/share/fonts/montserrat
-  ln -sfn /usr/share/texmf-dist/fonts/opentype/public/newcomputermodern ~/.local/share/fonts/newcomputermodern
-  ln -sfn /usr/share/texmf-dist/fonts/truetype/ascender/opensans ~/.local/share/fonts/opensans
-  ln -sfn /usr/share/texmf-dist/fonts/opentype/ibm/plex ~/.local/share/fonts/plex
-  ln -sfn /usr/share/texmf-dist/fonts/opentype/adobe/sourcecodepro ~/.local/share/fonts/sourcecodepro
-  ln -sfn /usr/share/texmf-dist/fonts/adobe/sourcesanspro ~/.local/share/fonts/sourcesanspro
-  ln -sfn /usr/share/texmf-dist/fonts/opentype/adobe/sourceserifpro ~/.local/share/fonts/sourceserifpro
-  ln -sfn /usr/share/texmf-dist/fonts/opentype/public/stix2-otf ~/.local/share/fonts/stix2-otf
-  ln -sfn /usr/share/texmf-dist/fonts/opentype/public/tex-gyre ~/.local/share/fonts/tex-gyre
-  ln -sfn /usr/share/texmf-dist/fonts/opentype/public/tex-gyre-math ~/.local/share/fonts/tex-gyre-math
-
-  info "Updating font cache..."
-  fc-cache -v
-  success "Fonts setup complete."
-}
-
-if confirm_step "Setup fonts"; then
-  setup_fonts
-else
-  warn "Skipping font setup."
-fi
-
-# ==============================================================================
-# SECTION 19: NEWSBOAT URLS
+# NEWSBOAT URLS
 # ==============================================================================
 
 restore_newsboat_urls() {
@@ -295,7 +245,7 @@ else
 fi
 
 # ==============================================================================
-# SECTION 20: CHANGE TTY FONT
+# CHANGE TTY FONT
 # ==============================================================================
 
 change_tty_font() {
@@ -331,7 +281,7 @@ else
 fi
 
 # ==============================================================================
-# SECTION 21: GRUB
+# GRUB
 # ==============================================================================
 
 configure_grub() {
@@ -386,7 +336,7 @@ else
 fi
 
 # ==============================================================================
-# SECTION 22: CHANGE GETTY ISSUE
+# CHANGE GETTY ISSUE
 # ==============================================================================
 
 update_getty_issue() {
@@ -417,7 +367,7 @@ else
 fi
 
 # ==============================================================================
-# SECTION 23: SKIP USERNAME
+# SKIP USERNAME
 # ==============================================================================
 
 setup_auto_login() {
@@ -455,7 +405,7 @@ else
 fi
 
 # ==============================================================================
-# SECTION 24: FIREFOX SETUP
+# FIREFOX SETUP
 # ==============================================================================
 
 setup_firefox() {
@@ -523,18 +473,18 @@ else
 fi
 
 # ==============================================================================
-# SECTION 25: FSTAB SETUP
+# FSTAB SETUP
 # ==============================================================================
 
 setup_fstab() {
   info "Setting up /etc/fstab..."
-  info "Mount C, D, and E drives using the dmenu mounter script."
+  info "Mount windows drives using the dmenu mounter script."
   sleep 2
-  mounter || warn "mounter command failed for C drive."
+  mounter || warn "mounter command failed."
   sleep 2
-  mounter || warn "mounter command failed for D drive."
+  mounter || warn "mounter command failed."
   sleep 2
-  mounter || warn "mounter command failed for E drive."
+  mounter || warn "mounter command failed."
 
   sudo genfstab / >~/fstab
   if command -v xclip >/dev/null 2>&1; then
@@ -559,7 +509,7 @@ else
 fi
 
 # ==============================================================================
-# SECTION 26: MISCELLANEOUS SETUP
+# MISCELLANEOUS SETUP
 # ==============================================================================
 
 setup_misc() {
