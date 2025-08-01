@@ -26,11 +26,11 @@ error() {
 # Confirmation function
 confirm_step() {
   while true; do
-    input "Proceed with '$1'? [Y/n]: "
+    input "Proceed with '$1'? [y/N]: "
     read -r response
     case "$response" in
-    [yY] | "") return 0 ;; # Proceed
-    [nN]) return 1 ;;      # Skip
+    [yY]) return 0 ;;
+    [nN] | "") return 1 ;;
     *) warn "Invalid input. Please enter 'y' or 'n'." ;;
     esac
   done

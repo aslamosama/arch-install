@@ -26,11 +26,11 @@ error() {
 # Confirmation function
 confirm_step() {
   while true; do
-    input "Proceed with '$1'? [Y/n]: "
+    input "Proceed with '$1'? [y/N]: "
     read -r response
     case "$response" in
-    [yY] | "") return 0 ;;
-    [nN]) return 1 ;;
+    [yY]) return 0 ;;
+    [nN] | "") return 1 ;;
     *) warn "Invalid input. Please enter 'y' or 'n'." ;;
     esac
   done
@@ -74,7 +74,7 @@ if confirm_step "Install AUR Helper (yay) and Packages"; then
 
   info "Installing packages from AUR using yay from aur.txt..."
   if [ -f "aur.txt" ]; then
-    yay -S --needed --noconfirm - < aur.txt || error "Failed to install AUR packages."
+    yay -S --needed --noconfirm - <aur.txt || error "Failed to install AUR packages."
     success "AUR packages installed."
   else
     error "aur.txt not found."
@@ -168,7 +168,7 @@ if confirm_step "Install npm and pipx Packages"; then
   if [ -f "pipx.txt" ]; then
     while IFS= read -r package; do
       pipx install "$package" || error "pipx install failed for $package."
-    done < pipx.txt
+    done <pipx.txt
     success "pipx packages installed."
   else
     error "pipx.txt not found."
@@ -414,53 +414,85 @@ setup_firefox() {
   local BACKUP_DIR="$HOME/backup/firefox_places"
   local USER_JS_URL="https://raw.githubusercontent.com/yokoffing/Betterfox/main/user.js"
 
-  pkill firefox
+  pkill --exact firefox || true
   sleep 2
 
-  restore_profile() {
+  restore_firefox_profile() {
     local PROFILE_NAME="$1"
+    local PROFILE_PATH="$2"
     local BACKUP_FILE="$BACKUP_DIR/places_${PROFILE_NAME}.sqlite"
-    local PROFILE_PATH
-    PROFILE_PATH=$(find "$PROFILE_DIR" -maxdepth 1 -type d -name "*$PROFILE_NAME*" | head -n 1)
+
     if [ -d "$PROFILE_PATH" ]; then
-      cp -iv "$BACKUP_FILE" "$PROFILE_PATH/places.sqlite"
+      info "Restoring profile '$PROFILE_NAME' to '$PROFILE_PATH'"
+      cp -v "$BACKUP_FILE" "$PROFILE_PATH/places.sqlite"
       chmod 600 "$PROFILE_PATH/places.sqlite"
       chown "$USER:$USER" "$PROFILE_PATH/places.sqlite"
+      success "Restored profile '$PROFILE_NAME'."
+    else
+      warn "Firefox profile path for '$PROFILE_NAME' not found or is not a directory: $PROFILE_PATH"
+    fi
+  }
+
+  apply_firefox_userjs() {
+    local PROFILE_PATH="$1"
+    if [ -d "$PROFILE_PATH" ]; then
+      info "Applying user.js to profile: $PROFILE_PATH"
       curl -sSL "$USER_JS_URL" -o "$PROFILE_PATH/user.js"
       chmod 644 "$PROFILE_PATH/user.js"
+      cat <<EOF >>"$PROFILE_PATH/user.js"
+/****************************************************************************
+ * START: MY OVERRIDES                                                      *
+****************************************************************************/
+user_pref("browser.tabs.closeWindowWithLastTab", false);
+user_pref("layout.css.devPixelsPerPx", "0.95");
+user_pref("media.videocontrols.picture-in-picture.video-toggle.enabled", false);
+user_pref("browser.startup.homepage", "chrome://browser/content/blanktab.html");
+user_pref("browser.newtabpage.enabled", false");
+EOF
+      success "Applied user.js to $PROFILE_PATH"
     else
-      warn "Firefox profile '$PROFILE_NAME' not found."
+      warn "Profile path not found, skipping user.js for: $PROFILE_PATH"
     fi
   }
 
   firefox --CreateProfile "olddefault" >/dev/null
-  restore_profile "default-release"
-  restore_profile "olddefault"
 
-  input "Set engine to duckduckgo for both profiles, then press Enter to continue..."
-  read -r
-  input "Set compact mode for both profiles, then press Enter to continue..."
-  read -r
-  input "Set about:config browser.tabs.closeWindowWithLastTab to false for both profiles, then press Enter to continue..."
-  read -r
-  input "Set appropriate layout.css.devPixelsPerPx for both profiles in about:config, then press Enter to continue..."
-  read -r
-  info "Install Extensions for 'default-release': bitwarden, sponsorblock, ublock origin, scihub, turbo download manager"
-  input "Press Enter once done..."
-  read -r
-  info "Install Extensions for 'olddefault': bitwarden, turbo download manager, ublock origin, windscribe"
-  input "Press Enter once done..."
-  read -r
-  info "Review filter lists from https://github.com/yokoffing/filterlists#guidelines for both profiles"
-  input "Press Enter once done..."
-  read -r
-  info "Disable PiP popup for both profiles"
-  input "Press Enter once done..."
-  read -r
+  local PROFILE_PATH_DEFAULT_RELEASE
+  PROFILE_PATH_DEFAULT_RELEASE=$(find "$PROFILE_DIR" -maxdepth 1 -type d -name "*default-release*" | head -n 1)
+  local PROFILE_PATH_OLDDEFAULT
+  PROFILE_PATH_OLDDEFAULT=$(find "$PROFILE_DIR" -maxdepth 1 -type d -name "*olddefault*" | head -n 1)
+
+  restore_firefox_profile "default-release" "$PROFILE_PATH_DEFAULT_RELEASE"
+  restore_firefox_profile "olddefault" "$PROFILE_PATH_OLDDEFAULT"
+
+  apply_firefox_userjs "$PROFILE_PATH_DEFAULT_RELEASE"
+  apply_firefox_userjs "$PROFILE_PATH_OLDDEFAULT"
+
+  info "Launching 'default-release'..."
+  firefox -P "default-release" --no-remote \
+    "about:settings#search" \
+    "https://github.com/yokoffing/filterlists#guidelines" \
+    "https://addons.mozilla.org/firefox/addon/ublock-origin/" \
+    "https://addons.mozilla.org/firefox/addon/sponsorblock/" \
+    "https://addons.mozilla.org/firefox/addon/bitwarden-password-manager/" \
+    "https://addons.mozilla.org/firefox/addon/turbo-download-manager/" \
+    "https://addons.mozilla.org/firefox/addon/tridactyl-vim/" \
+    "https://addons.mozilla.org/firefox/addon/youtube-shorts-block/" \
+    "https://addons.mozilla.org/firefox/addon/sci-hub-addon/" &
+
+  info "Launching 'olddefault'..."
+  firefox -P "olddefault" --no-remote \
+    "about:settings#search" \
+    "https://github.com/yokoffing/filterlists#guidelines" \
+    "https://addons.mozilla.org/firefox/addon/ublock-origin/" \
+    "https://addons.mozilla.org/firefox/addon/bitwarden-password-manager/" \
+    "https://addons.mozilla.org/firefox/addon/turbo-download-manager/" \
+    "https://addons.mozilla.org/firefox/addon/youtube-shorts-block/" \
+    "https://addons.mozilla.org/firefox/addon/windscribe/" &
+
+  info "Go through each open tab in both profiles and configure accordingly"
+  info "Set compact mode for both profiles"
   info "Set Ctrl+H to sort by last visited for both profiles"
-  input "Press Enter once done..."
-  read -r
-  info "Set default homepage and newtab page to blank for both profiles"
   input "Press Enter once done..."
   read -r
   success "Firefox setup complete."
