@@ -11,6 +11,7 @@ bat
 bc
 bear
 biber
+bind
 blender
 brightnessctl
 chafa

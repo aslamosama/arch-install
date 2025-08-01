@@ -26,11 +26,11 @@ error() {
 # Confirmation function
 confirm_step() {
   while true; do
-    input "Proceed with '$1'? [Y/n]: "
+    input "Proceed with '$1'? [y/N]: "
     read -r response
     case "$response" in
-    [yY] | "") return 0 ;;
-    [nN]) return 1 ;;
+    [yY]) return 0 ;;
+    [nN] | "") return 1 ;;
     *) warn "Invalid input. Please enter 'y' or 'n'." ;;
     esac
   done
@@ -74,7 +74,7 @@ if confirm_step "Install AUR Helper (yay) and Packages"; then
 
   info "Installing packages from AUR using yay from aur.txt..."
   if [ -f "aur.txt" ]; then
-    yay -S --needed --noconfirm - < aur.txt || error "Failed to install AUR packages."
+    yay -S --needed --noconfirm - <aur.txt || error "Failed to install AUR packages."
     success "AUR packages installed."
   else
     error "aur.txt not found."
@@ -168,7 +168,7 @@ if confirm_step "Install npm and pipx Packages"; then
   if [ -f "pipx.txt" ]; then
     while IFS= read -r package; do
       pipx install "$package" || error "pipx install failed for $package."
-    done < pipx.txt
+    done <pipx.txt
     success "pipx packages installed."
   else
     error "pipx.txt not found."
@@ -410,57 +410,134 @@ fi
 
 setup_firefox() {
   info "Setting up Firefox..."
+  info "Opening Firefox Headless..."
+  firefox --headless &
+  sleep 5
   local PROFILE_DIR="$HOME/.mozilla/firefox"
   local BACKUP_DIR="$HOME/backup/firefox_places"
   local USER_JS_URL="https://raw.githubusercontent.com/yokoffing/Betterfox/main/user.js"
 
-  pkill firefox
+  info "Killing Firefox Headless..."
+  pkill --exact firefox || true
   sleep 2
 
-  restore_profile() {
+  restore_firefox_profile() {
     local PROFILE_NAME="$1"
+    local PROFILE_PATH="$2"
     local BACKUP_FILE="$BACKUP_DIR/places_${PROFILE_NAME}.sqlite"
-    local PROFILE_PATH
-    PROFILE_PATH=$(find "$PROFILE_DIR" -maxdepth 1 -type d -name "*$PROFILE_NAME*" | head -n 1)
+
     if [ -d "$PROFILE_PATH" ]; then
-      cp -iv "$BACKUP_FILE" "$PROFILE_PATH/places.sqlite"
+      info "Restoring profile '$PROFILE_NAME' to '$PROFILE_PATH'"
+      cp -v "$BACKUP_FILE" "$PROFILE_PATH/places.sqlite"
       chmod 600 "$PROFILE_PATH/places.sqlite"
       chown "$USER:$USER" "$PROFILE_PATH/places.sqlite"
-      curl -sSL "$USER_JS_URL" -o "$PROFILE_PATH/user.js"
-      chmod 644 "$PROFILE_PATH/user.js"
+      success "Restored profile '$PROFILE_NAME'."
     else
-      warn "Firefox profile '$PROFILE_NAME' not found."
+      warn "Firefox profile path for '$PROFILE_NAME' not found or is not a directory: $PROFILE_PATH"
     fi
   }
 
-  firefox --CreateProfile "olddefault" >/dev/null
-  restore_profile "default-release"
-  restore_profile "olddefault"
+  apply_firefox_userjs() {
+    local PROFILE_PATH="$1"
+    if [ -d "$PROFILE_PATH" ]; then
+      info "Applying user.js to profile: $PROFILE_PATH"
+      curl -sSL "$USER_JS_URL" -o "$PROFILE_PATH/user.js"
+      chmod 644 "$PROFILE_PATH/user.js"
+      cat <<EOF >>"$PROFILE_PATH/user.js"
+/****************************************************************************
+ * START: MY OVERRIDES                                                      *
+****************************************************************************/
+user_pref("browser.tabs.closeWindowWithLastTab", false);
+user_pref("layout.css.devPixelsPerPx", "0.95");
+user_pref("media.videocontrols.picture-in-picture.video-toggle.enabled", false);
+user_pref("browser.startup.homepage", "chrome://browser/content/blanktab.html");
+user_pref("browser.newtabpage.enabled", false);
+user_pref("ui.context_menus.after_mouseup", true);
+EOF
+      success "Applied user.js to $PROFILE_PATH"
+    else
+      warn "Profile path not found, skipping user.js for: $PROFILE_PATH"
+    fi
+  }
 
-  input "Set engine to duckduckgo for both profiles, then press Enter to continue..."
-  read -r
-  input "Set compact mode for both profiles, then press Enter to continue..."
-  read -r
-  input "Set about:config browser.tabs.closeWindowWithLastTab to false for both profiles, then press Enter to continue..."
-  read -r
-  input "Set appropriate layout.css.devPixelsPerPx for both profiles in about:config, then press Enter to continue..."
-  read -r
-  info "Install Extensions for 'default-release': bitwarden, sponsorblock, ublock origin, scihub, turbo download manager"
-  input "Press Enter once done..."
-  read -r
-  info "Install Extensions for 'olddefault': bitwarden, turbo download manager, ublock origin, windscribe"
-  input "Press Enter once done..."
-  read -r
-  info "Review filter lists from https://github.com/yokoffing/filterlists#guidelines for both profiles"
-  input "Press Enter once done..."
-  read -r
-  info "Disable PiP popup for both profiles"
-  input "Press Enter once done..."
-  read -r
+  install_firefox_addons() {
+    local profile_path="$1"
+    shift
+    local addonlist="$@"
+    local addontmp
+    addontmp="$(mktemp -d)"
+    trap "rm -fr $addontmp" HUP INT QUIT TERM PWR EXIT
+
+    info "Installing addons for profile: $profile_path"
+    mkdir -p "$profile_path/extensions/"
+
+    for addon in $addonlist; do
+      info "Processing addon: $addon"
+      local addonurl
+      addonurl="$(curl --silent "https://addons.mozilla.org/en-US/firefox/addon/${addon}/" | grep -o 'https://addons.mozilla.org/firefox/downloads/file/[^"\n]*')"
+
+      if [ -z "$addonurl" ]; then
+        warn "Could not find download URL for $addon"
+        continue
+      fi
+
+      local file="${addonurl##*/}"
+      curl -Ls "$addonurl" -o "$addontmp/$file"
+
+      local id
+      id=$(unzip -p "$addontmp/$file" manifest.json 2>/dev/null | jq -r '.id // .browser_specific_settings.gecko.id')
+
+      if [ "$id" = "null" ] || [ -z "$id" ]; then
+        if unzip -l "$addontmp/$file" | grep -q "mozilla-recommendation.json"; then
+          id=$(unzip -p "$addontmp/$file" mozilla-recommendation.json | jq -r '.addon_id')
+        fi
+      fi
+
+      if [ "$id" != "null" ] && [ -n "$id" ]; then
+        mv "$addontmp/$file" "$profile_path/extensions/$id.xpi"
+        success "Installed $addon"
+      else
+        warn "Could not find addon ID for $addon"
+      fi
+    done
+  }
+
+  firefox --CreateProfile "olddefault" >/dev/null
+
+  local PROFILE_PATH_DEFAULT_RELEASE
+  PROFILE_PATH_DEFAULT_RELEASE=$(find "$PROFILE_DIR" -maxdepth 1 -type d -name "*default-release*" | head -n 1)
+  local PROFILE_PATH_OLDDEFAULT
+  PROFILE_PATH_OLDDEFAULT=$(find "$PROFILE_DIR" -maxdepth 1 -type d -name "*olddefault*" | head -n 1)
+
+  restore_firefox_profile "default-release" "$PROFILE_PATH_DEFAULT_RELEASE"
+  restore_firefox_profile "olddefault" "$PROFILE_PATH_OLDDEFAULT"
+
+  apply_firefox_userjs "$PROFILE_PATH_DEFAULT_RELEASE"
+  apply_firefox_userjs "$PROFILE_PATH_OLDDEFAULT"
+
+  local default_release_addons="ublock-origin sponsorblock bitwarden-password-manager turbo-download-manager tridactyl-vim youtube-shorts-block sci-hub-addon"
+  local olddefault_addons="ublock-origin bitwarden-password-manager turbo-download-manager youtube-shorts-block windscribe"
+
+  install_firefox_addons "$PROFILE_PATH_DEFAULT_RELEASE" $default_release_addons
+  install_firefox_addons "$PROFILE_PATH_OLDDEFAULT" $olddefault_addons
+
+  info "Launching 'default-release'..."
+  firefox -P "default-release" --no-remote \
+    "about:settings#search" \
+    "about:addons" \
+    "https://github.com/yokoffing/filterlists#guidelines" &
+
+  info "Launching 'olddefault'..."
+  firefox -P "olddefault" --no-remote \
+    "about:settings#search" \
+    "about:addons" \
+    "https://github.com/yokoffing/filterlists#guidelines" &
+
+  info "Go through each open tab in both profiles and configure accordingly"
+  info "Update Ublock Filters"
+  info "Log in to password manager"
+  info "Set compact mode for both profiles and customize toolbar"
   info "Set Ctrl+H to sort by last visited for both profiles"
-  input "Press Enter once done..."
-  read -r
-  info "Set default homepage and newtab page to blank for both profiles"
   input "Press Enter once done..."
   read -r
   success "Firefox setup complete."
@@ -561,7 +638,8 @@ EOF
 
   info "Configuring qalc..."
   if command -v qalc >/dev/null 2>&1; then
-    qalc
+    setsid -f qalc &
+    sleep 2
     echo 'calculate_as_you_type=1' >>~/.config/qalculate/qalc.cfg
   else
     warn "qalc command not found."
@@ -581,11 +659,11 @@ fi
 
 success "Post-GUI setup script finished!"
 
-if confirm_step "Reboot now to apply all changes"; then
+if confirm_step "Reboot"; then
   info "Rebooting now..."
   sudo reboot
 else
-  info "Please reboot manually to apply all changes."
+  info "Please reboot manually."
 fi
 
 info "Script finished!"
