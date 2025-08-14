@@ -57,7 +57,6 @@ libreoffice-fresh
 libxft
 libxinerama
 love
-lsd
 lua-language-server
 maim
 man-db

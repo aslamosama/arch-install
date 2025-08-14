@@ -14,5 +14,8 @@ picom-pijulius-next-git
 python-pandoc-include
 qogir-gtk-theme
 simple-mtpfs
+stack-bin
 task-spooler
+typstyle-bin
 vscode-langservers-extracted
+warpgui-bin

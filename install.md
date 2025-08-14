@@ -120,7 +120,7 @@ First run `pre-gui` script and reboot:
 Then run `post-gui` script.
 
 ```bash
-./pre_gui.sh
+./post_gui.sh
 ```
 
 ---
