@@ -286,6 +286,22 @@ else
 fi
 
 # ==============================================================================
+# ZSH EXPORTS
+# ==============================================================================
+
+if confirm_step "Restore zsh exports"; then
+  info "Restoring zsh exports..."
+  if [ -f ~/backup/shell-exports ]; then
+    cp -iv ~/backup/shell-exports ~/.config/shell/exports
+    success "Zsh exports restored."
+  else
+    warn "Zsh exports backup not found at ~/backup/shell-exports"
+  fi
+else
+  warn "Skipping zsh exports restoration."
+fi
+
+# ==============================================================================
 # COMPILE SUCKLESS UTILS
 # ==============================================================================
 

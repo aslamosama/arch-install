@@ -36,7 +36,7 @@ if [ -n "$missing_tools" ]; then
 fi
 
 # --------------------------------------------
-# 1. Commit and Push Dotfiles via lazygit
+# Commit and Push Dotfiles via lazygit
 # --------------------------------------------
 
 cd "$HOME/dotfiles" || error "Could not cd into '~/dotfiles'."
@@ -77,7 +77,7 @@ fi
 cd "$HOME" || error "Could not return to home directory."
 
 # --------------------------------------------
-# 3. Backup Fonts
+# Backup Fonts
 # --------------------------------------------
 
 FONT_DIR="$HOME/.local/share/fonts"
@@ -99,7 +99,7 @@ else
 fi
 
 # --------------------------------------------
-# 4. Backup Firefox Bookmarks & History
+# Backup Firefox Bookmarks & History
 # --------------------------------------------
 
 PROFILE_DIR="$HOME/.mozilla/firefox"
@@ -127,7 +127,7 @@ for PROFILE_NAME in "default-release" "olddefault"; do
 done
 
 # --------------------------------------------
-# 5. Backup Newsboat URLs
+# Backup Newsboat URLs
 # --------------------------------------------
 
 NEWSBOAT_SRC="$HOME/.config/newsboat/urls"
@@ -145,7 +145,25 @@ else
 fi
 
 # --------------------------------------------
-# 6. Backup SSH Keys
+# Backup zsh exports
+# --------------------------------------------
+
+EXPORTS_SRC="$HOME/.config/shell/exports"
+EXPORTS_DEST="$HOME/backup/shell-exports"
+
+if [ -f "$EXPORTS_SRC" ]; then
+  cp "$EXPORTS_SRC" "$EXPORTS_DEST" || warn "Failed to copy exports file"
+  if [ -f "$EXPORTS_DEST" ]; then
+    success "Zsh exorts backed up to '$EXPORTS_DEST'."
+  else
+    warn "Backup file '$EXPORTS_DEST' not found."
+  fi
+else
+  warn "Zsh exports file '$EXPORTS_SRC' does not exist; skipping."
+fi
+
+# --------------------------------------------
+# Backup SSH Keys
 # --------------------------------------------
 
 SSH_DIR="$HOME/.ssh"
@@ -163,7 +181,7 @@ else
 fi
 
 # --------------------------------------------
-# 2. Backup and Edit /etc/fstab
+# Backup and Edit /etc/fstab
 # --------------------------------------------
 
 mkdir -p "$HOME/backup" || error "Failed to create '$HOME/backup'."
@@ -183,7 +201,7 @@ case "$choice" in
 esac
 
 # --------------------------------------------
-# 8. Backup
+# Backup
 # --------------------------------------------
 
 if [ ! -d "$HOME/backup" ]; then
