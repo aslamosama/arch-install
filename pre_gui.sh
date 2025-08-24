@@ -412,6 +412,39 @@ else
 fi
 
 # ==============================================================================
+# pacman hook to keep package lists updated
+# ==============================================================================
+
+if confirm_step "Packman pkglist hook"; then
+  info "Creating pacman hook to track package lists."
+  USER_NAME=$(whoami)
+  HOOK_DIR="/etc/pacman.d/hooks"
+  HOOK_FILE="$HOOK_DIR/track_pkglist.hook"
+  SAVE_DIR="/home/$USER_NAME/.local/src/arch-install"
+
+  sudo mkdir -p "$HOOK_DIR"
+  mkdir -p "$SAVE_DIR"
+
+  sudo tee "$HOOK_FILE" >/dev/null <<EOF
+[Trigger]
+Operation = Install
+Operation = Remove
+Type = Package
+Target = *
+
+[Action]
+Description = Updating package lists (pacman.txt and aur.txt)...
+When = PostTransaction
+Exec = /bin/sh -c '/usr/bin/pacman -Qqen > $SAVE_DIR/pacman.txt && /usr/bin/pacman -Qqem | grep -vE "(-debug$|^yay-bin$)" > $SAVE_DIR/aur.txt'
+EOF
+
+  success "Hook created at $HOOK_FILE"
+  success "Package lists will be saved under: $SAVE_DIR"
+else
+  warn "Skipping Packman pkglist hook."
+fi
+
+# ==============================================================================
 # REBOOT
 # ==============================================================================
 

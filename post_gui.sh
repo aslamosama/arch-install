@@ -516,7 +516,7 @@ EOF
   apply_firefox_userjs "$PROFILE_PATH_OLDDEFAULT"
 
   local default_release_addons="ublock-origin sponsorblock bitwarden-password-manager turbo-download-manager tridactyl-vim youtube-shorts-block sci-hub-addon"
-  local olddefault_addons="ublock-origin bitwarden-password-manager turbo-download-manager youtube-shorts-block windscribe"
+  local olddefault_addons="ublock-origin bitwarden-password-manager turbo-download-manager youtube-shorts-block proton-vpn-firefox-extension 4chanx imagus"
 
   install_firefox_addons "$PROFILE_PATH_DEFAULT_RELEASE" $default_release_addons
   install_firefox_addons "$PROFILE_PATH_OLDDEFAULT" $olddefault_addons

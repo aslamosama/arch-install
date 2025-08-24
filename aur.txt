@@ -1,8 +1,9 @@
 ani-cli
 ariang-allinone-bin
 ctpv-git
-dict-wn
 dragon-drop
+gemini-cli
+informant
 iwe-bin
 mangal-bin
 networkmanager-dmenu-git
@@ -15,7 +16,8 @@ python-pandoc-include
 qogir-gtk-theme
 simple-mtpfs
 stack-bin
+surge.sh
 task-spooler
 typstyle-bin
 vscode-langservers-extracted
-warpgui-bin
+wordnet-dictd
