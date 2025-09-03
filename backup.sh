@@ -181,7 +181,7 @@ else
 fi
 
 # --------------------------------------------
-# Backup and Edit /etc/fstab
+# Backup /etc/fstab
 # --------------------------------------------
 
 mkdir -p "$HOME/backup" || error "Failed to create '$HOME/backup'."
@@ -192,13 +192,6 @@ if [ -f "$HOME/backup/fstab.bak" ]; then
 else
   error "Backup file '$HOME/backup/fstab.bak' was not found."
 fi
-
-input "Remove NTFS entries? [Y/n]: "
-read choice
-case "$choice" in
-[nN]*) break ;;
-*) sudo nvim /etc/fstab || warn "Exited editor; ensure /etc/fstab was edited." ;;
-esac
 
 # --------------------------------------------
 # Backup

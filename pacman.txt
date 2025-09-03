@@ -76,6 +76,7 @@ lua-language-server
 maim
 man-db
 mdcat
+mediainfo
 meld
 meson
 moreutils
