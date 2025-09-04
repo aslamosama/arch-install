@@ -585,6 +585,17 @@ else
   warn "Skipping fstab setup."
 fi
 
+bluetooth_setup() {
+  info "Enabling bluetooth service..."
+  systemctl enable bluetooth.service
+}
+
+if confirm_step "Enable bluetooth service"; then
+  bluetooth_setup
+else
+  warn "Skipping bluetooth service."
+fi
+
 # ==============================================================================
 # MISCELLANEOUS SETUP
 # ==============================================================================

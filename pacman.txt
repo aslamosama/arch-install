@@ -18,6 +18,9 @@ bear
 biber
 bind
 blender
+bluetui
+bluez
+bluez-utils
 brightnessctl
 chafa
 clang
@@ -117,6 +120,7 @@ reflector
 ripgrep
 rsync
 ruff
+scrcpy
 shfmt
 smartmontools
 speedtest-cli
