@@ -346,18 +346,17 @@ update_getty_issue() {
   fi
 
   cat <<'EOF' >/etc/issue
- [H [2J
-            [0;36m.                                                      [0;36m| \s \r
-           [0;36m/ \                                                     [0;36m|  [0;37m\m
-          [0;36m/   \       [1;37m               #      [1;36m| *                      [0;36m|
-         [0;36m/^.   \      [1;37m a##e #%" a#"e 6##%   [1;36m| | |-^-. |   | \ /      [0;36m|  [0;37m\t
-        [0;36m/  .-.  \     [1;37m.oOo# #   #    #  #   [1;36m| | |   | |   |  X       [0;36m|  [0;37m\d
-       [0;36m/  (   ) _\    [1;37m%OoO# #   %#e" #  #   [1;36m| | |   | ^._.| / \  [0;37mTM   [0;36m|
-      [1;36m/ _.~   ~._^\                                                [0;36m|  [0;37m\U
-     [1;36m/.^         ^.\  [0;37mTM                                            [0;36m| \l  [0;37mon \n
- [0m
+ [H [2J
+            [0;36m.                                                        [0;36m| \s \r
+           [0;36m/ \\                                                       [0;36m| [0;37m\m
+          [0;36m/   \\       [1;37m               #      [1;36m| *                      [0;36m|
+         [0;36m/^.   \\      [1;37m a##e #%" a#"e 6##%   [1;36m| | |-^-. |   | \\ /      [0;36m| [0;37m\t
+        [0;36m/  .-.  \\     [1;37m.oOo# #   #    #  #   [1;36m| | |   | |   |  X       [0;36m| [0;37m\d
+       [0;36m/  (   ) _\\    [1;37m%OoO# #   %#e" #  #   [1;36m| | |   | ^._.| / \\  [0;37mTM  [0;36m|
+      [1;36m/ _.~   ~._^\\                                                  [0;36m| [0;37m\U
+     [1;36m/.^         ^.\\  [0;37mTM                                             [0;36m| \l  [0;37mon \n
+ [0m
 EOF
-  success "/etc/issue has been updated."
 }
 
 if confirm_step "Update /etc/issue"; then
@@ -394,8 +393,6 @@ setup_auto_login() {
 ExecStart=
 ExecStart=-/sbin/agetty -o '-p -- $USERNAME' --noclear --skip-login - \$TERM
 EOF
-
-  success "Auto-login configured for user: $USERNAME"
 }
 
 if confirm_step "Setup auto-login (skip username prompt)"; then
@@ -585,6 +582,17 @@ else
   warn "Skipping fstab setup."
 fi
 
+bluetooth_setup() {
+  info "Enabling bluetooth service..."
+  systemctl enable bluetooth.service
+}
+
+if confirm_step "Enable bluetooth service"; then
+  bluetooth_setup
+else
+  warn "Skipping bluetooth service."
+fi
+
 # ==============================================================================
 # MISCELLANEOUS SETUP
 # ==============================================================================
@@ -612,7 +620,7 @@ setup_misc() {
 
   info "Setting up cmus..."
   input "Add music folder to cmus and set theme to night, then press Enter to continue..."
-  cmus
+  # cmus
   read -r
 
   info "Creating download directories..."

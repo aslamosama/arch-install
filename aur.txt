@@ -13,11 +13,9 @@ pandoc-crossref-bin
 phinger-cursors
 picom-pijulius-next-git
 python-pandoc-include
-qogir-gtk-theme
 sc-im
 simple-mtpfs
 stack-bin
-surge.sh
 task-spooler
 typstyle-bin
 vscode-langservers-extracted

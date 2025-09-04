@@ -1,5 +1,6 @@
 7zip
 acpi
+adw-gtk-theme
 alacritty
 alsa-utils
 android-tools
@@ -18,6 +19,9 @@ bear
 biber
 bind
 blender
+bluetui
+bluez
+bluez-utils
 brightnessctl
 chafa
 clang
@@ -116,7 +120,9 @@ qrencode
 reflector
 ripgrep
 rsync
+rtkit
 ruff
+scrcpy
 shfmt
 smartmontools
 speedtest-cli
@@ -175,4 +181,5 @@ zathura
 zathura-djvu
 zathura-pdf-poppler
 zip
+zram-generator
 zsh
