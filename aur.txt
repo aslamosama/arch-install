@@ -1,9 +1,16 @@
 ani-cli
 ariang-allinone-bin
+bullshit
+cmus-git
 ctpv-git
 dragon-drop
-gemini-cli
-informant
+edir
+findent
+fortitude-bin
+fortls
+fprettify
+gcalcli
+gradia
 iwe-bin
 mangal-bin
 networkmanager-dmenu-git
@@ -18,5 +25,6 @@ simple-mtpfs
 stack-bin
 task-spooler
 typstyle-bin
+vdhcoapp-bin
 vscode-langservers-extracted
 wordnet-dictd
