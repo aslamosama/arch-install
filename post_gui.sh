@@ -254,7 +254,7 @@ change_tty_font() {
     error "This step must be run as root."
   fi
 
-  local FONT_NAME="iso07u-16"
+  local FONT_NAME="iso01-12x22"
   local FONT_PATH="/usr/share/kbd/consolefonts/${FONT_NAME}.psfu.gz"
   local VCONSOLE_CONF="/etc/vconsole.conf"
   local BACKUP_CONF="/etc/vconsole.conf.bak.$(date +%s)"
@@ -285,7 +285,7 @@ fi
 # ==============================================================================
 
 configure_grub() {
-  info "Configuring bigger GRUB font..."
+  info "Configuring bigger GRB font..."
   if [[ $EUID -ne 0 ]]; then
     error "This step must be run as root."
   fi

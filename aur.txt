@@ -1,6 +1,7 @@
 ani-cli
 ariang-allinone-bin
 bullshit
+calculix-ccx
 cmus-git
 ctpv-git
 dragon-drop
@@ -11,6 +12,7 @@ fortls
 fprettify
 gcalcli
 gradia
+ipscan-bin
 iwe-bin
 mangal-bin
 mdcat
@@ -28,7 +30,7 @@ simple-mtpfs
 stack-bin
 task-spooler
 ttf-symbola
-typstyle-bin
 vdhcoapp-bin
 vscode-langservers-extracted
 wordnet-dictd
+xdg-desktop-portal-termfilechooser-hunkyburrito-git
